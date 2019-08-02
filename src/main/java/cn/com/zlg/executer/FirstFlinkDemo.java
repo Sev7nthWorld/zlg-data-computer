@@ -1,25 +1,38 @@
 package cn.com.zlg.executer;
 
-import cn.com.zlg.function.MyFlatMapFunction;
-import cn.com.zlg.util.ESBuilder;
+import cn.com.zlg.function.ValueStateFlatMapFunction;
+import cn.com.zlg.sink.ZlgElasticsearchSinkFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.TimeCharacteristic;
+import org.apache.flink.streaming.api.collector.selector.OutputSelector;
+import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.elasticsearch.util.RetryRejectedExecutionFailureHandler;
+import org.apache.flink.streaming.connectors.elasticsearch6.ElasticsearchSink;
 import org.apache.flink.util.Collector;
+import org.apache.http.HttpHost;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class FirstFlinkDemo {
     public static void main(String[] args) throws Exception {
         System.out.println("------------------------" + System.currentTimeMillis());
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-        env.enableCheckpointing(1000);
+        //env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+        //env.enableCheckpointing(1000);
 
-        SingleOutputStreamOperator input = env.readTextFile("C:\\Users\\zhaoxin\\idea-workspace\\ncloan\\zlg-data-computer\\src\\main\\resources\\input.txt").flatMap(new FlatMapFunction<String, Tuple2<String, Integer>>() {
+        List<HttpHost> esHttphost = new ArrayList<>();
+        esHttphost.add(new HttpHost("127.0.0.1", 9200, "http"));
+        ElasticsearchSink.Builder<Tuple2<String, Integer>> esSinkBuilder = new ElasticsearchSink.Builder<Tuple2<String, Integer>>(
+                esHttphost,
+                new ZlgElasticsearchSinkFunction());
+
+        DataStreamSink<Tuple2<String, Integer>> input = env.readTextFile("C:\\Users\\zhaoxin\\idea-workspace\\ncloan\\zlg-data-computer\\src\\main\\resources\\input.txt").flatMap(new FlatMapFunction<String, Tuple2<String, Integer>>() {
 
             @Override
             public void flatMap(String s, Collector<Tuple2<String, Integer>> collector) throws Exception {
@@ -36,8 +49,7 @@ public class FirstFlinkDemo {
                 else
                     return true;
             }
-        }).keyBy(0).flatMap(new MyFlatMapFunction());
-        /*.split(new OutputSelector<Tuple2<String, Integer>>() {
+        }).keyBy(0).split(new OutputSelector<Tuple2<String, Integer>>() {
             @Override
             public Iterable<String> select(Tuple2<String, Integer> input) {
                 List output = new ArrayList();
@@ -47,20 +59,20 @@ public class FirstFlinkDemo {
                     output.add("odd");
                 return output;
             }
-        }).select("even","odd").addSink(ESBuilder.esBuilder().build()).setParallelism(2);*/
+        }).select("even","odd").addSink(esSinkBuilder.build()).setParallelism(2);
 
-        ESBuilder.esBuilder().setBulkFlushMaxActions(1);
+       esSinkBuilder.setBulkFlushMaxActions(1);
 //        esSinkBuilder.setRestClientFactory(
 //                restClientBuilder -> {
 //                    restClientBuilder.setDefaultHeaders()
 //                }
 //        );
  //       esSinkBuilder.setRestClientFactory(new RestClientFactoryImpl());
-        ESBuilder.esBuilder().setFailureHandler(new RetryRejectedExecutionFailureHandler());
+        esSinkBuilder.setFailureHandler(new RetryRejectedExecutionFailureHandler());
 
 
 
-        input.print();
+        //input.print();
 
         env.execute();
     }
