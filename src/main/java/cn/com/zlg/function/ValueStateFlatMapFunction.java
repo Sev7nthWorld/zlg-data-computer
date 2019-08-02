@@ -9,7 +9,7 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
 
-public class MyFlatMapFunction extends RichFlatMapFunction<Tuple2<String, Integer>, Tuple2<String, Long>> {
+public class ValueStateFlatMapFunction extends RichFlatMapFunction<Tuple2<String, Integer>, Tuple2<String, Long>> {
     private transient ValueState<Long> leastValueState;
 
     @Override
