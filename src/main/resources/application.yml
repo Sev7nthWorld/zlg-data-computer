@@ -1,7 +1,0 @@
-zlg:
-  elasticsearch:
-    hostName: 127.0.0.1
-    port: 9200
-    connectTimeOut: 1000
-    connectionRequestTimeOut: 500
-    maxConnectNum: 10

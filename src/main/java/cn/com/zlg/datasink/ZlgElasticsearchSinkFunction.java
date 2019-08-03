@@ -1,4 +1,4 @@
-package cn.com.zlg.sink;
+package cn.com.zlg.datasink;
 
 import cn.com.zlg.util.ZlgElasticsearchUtil;
 import org.apache.flink.api.common.functions.RuntimeContext;
@@ -14,7 +14,7 @@ public class ZlgElasticsearchSinkFunction implements ElasticsearchSinkFunction {
         ZlgElasticsearchUtil esUtil = new ZlgElasticsearchUtil();
         Tuple2 temp = (Tuple2)o;
         try {
-            requestIndexer.add(esUtil.addSource("hello","id-" + temp.f0,temp));
+            requestIndexer.add(esUtil.addSource("hello",null,temp));
         } catch (Exception e) {
             e.printStackTrace();
         }

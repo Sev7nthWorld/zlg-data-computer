@@ -1,14 +1,11 @@
 package cn.com.zlg.executer;
 
-import cn.com.zlg.function.ValueStateFlatMapFunction;
-import cn.com.zlg.sink.ZlgElasticsearchSinkFunction;
+import cn.com.zlg.datasink.ZlgElasticsearchSinkFunction;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.collector.selector.OutputSelector;
 import org.apache.flink.streaming.api.datastream.DataStreamSink;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.elasticsearch.util.RetryRejectedExecutionFailureHandler;
 import org.apache.flink.streaming.connectors.elasticsearch6.ElasticsearchSink;
@@ -26,13 +23,15 @@ public class FirstFlinkDemo {
         //env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         //env.enableCheckpointing(1000);
 
+
+
         List<HttpHost> esHttphost = new ArrayList<>();
         esHttphost.add(new HttpHost("127.0.0.1", 9200, "http"));
         ElasticsearchSink.Builder<Tuple2<String, Integer>> esSinkBuilder = new ElasticsearchSink.Builder<Tuple2<String, Integer>>(
                 esHttphost,
                 new ZlgElasticsearchSinkFunction());
 
-        DataStreamSink<Tuple2<String, Integer>> input = env.readTextFile("C:\\Users\\zhaoxin\\idea-workspace\\ncloan\\zlg-data-computer\\src\\main\\resources\\input.txt").flatMap(new FlatMapFunction<String, Tuple2<String, Integer>>() {
+        DataStreamSink<Tuple2<String, Integer>> input = env.readTextFile("src/main/resources/input.txt").flatMap(new FlatMapFunction<String, Tuple2<String, Integer>>() {
 
             @Override
             public void flatMap(String s, Collector<Tuple2<String, Integer>> collector) throws Exception {
